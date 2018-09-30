@@ -45,7 +45,7 @@ exports.sendNotificationOnFriendRequest = functions.database
             icon: "default",
             clickAction: "openProfileActivity",
             type: "sentRequest",
-            senderId: senderId,
+            senderId,
             imageUrl: sendersImageUrl
           }
         };
@@ -101,7 +101,8 @@ exports.sendNotificationOnMessageSent = functions.database
                   clickAction: "openMainActivity",
                   type: "message",
                   imageUrl: sendersImageUrl,
-                  senderId: senderId
+                  senderId,
+                  pushId
                 }
               };
 
@@ -158,7 +159,7 @@ exports.sendNotificationOnAcceptingRequest = functions.database
                 clickAction: "openMainActivity",
                 type: "acceptRequest",
                 imageUrl: imageUrl,
-                senderId: senderId
+                senderId
               }
             };
 
