@@ -10,7 +10,7 @@ exports.sendNotificationOnFriendRequest = functions.database
   .onWrite((event, context) => {
     //  getting receiverUid and senderUid from "notifications" reference
     const receiverId = context.params.receiver_id;
-    const push_id = context.params.push_id;
+    const pushId = context.params.push_id;
 
     //  if the data does not exist on the reference then returning
     if (!event.after.exists()) {
@@ -43,13 +43,13 @@ exports.sendNotificationOnFriendRequest = functions.database
 
         let payload = {
           data: {
-            title: 'New Friend Request',
             body: `${senderUsername} has sent you a friend request `,
             icon: 'default',
             clickAction: 'openProfileActivity',
             type: 'sentRequest',
-            senderId,
-            imageUrl: sendersImageUrl
+            databaseReference: `/Notifications/${receiverId}/${pushId}`,
+            imageUrl: sendersImageUrl,
+            senderId
           }
         };
 
@@ -86,7 +86,21 @@ exports.sendNotificationOnMessageSent = functions.database
         .ref(`/Messages/${senderId}/${receiverId}/${pushId}`)
         .once('value')
         .then(messageData => {
+          let messageType = messageData.val().type;
           message = messageData.val().message;
+
+          // in case of image, audio, location not sending actual message (which is url) instead sending custom text
+          switch (messageType) {
+            case 'image':
+              message = '\uD83D\uDCF7 Image';
+              break;
+            case 'audio':
+              message = '\uD83D\uDD0A Audio';
+              break;
+            case 'location':
+              message = '\uD83D\uDCCC Location';
+              break;
+          }
 
           // returning ref to "Users" node to continue chaining
           return admin
@@ -103,15 +117,13 @@ exports.sendNotificationOnMessageSent = functions.database
 
           let payload = {
             data: {
-              title: 'New Message',
-              body: `${username} has sent you a new message`,
+              body: message,
               clickAction: 'openMainActivity',
               type: 'message',
               imageUrl: sendersImageUrl,
-              receiverId,
+              databaseReference: `/MessageReferenceForNotifications/${senderId}/${receiverId}/${pushId}`,
               username,
               senderId,
-              message,
               pushId
             }
           };
@@ -155,11 +167,11 @@ exports.sendNotificationOnAcceptingRequest = functions.database
 
           let payload = {
             data: {
-              title: 'New Message',
               body: `${receiversUsername} accepted your friend request `,
               clickAction: 'openMainActivity',
               type: 'acceptRequest',
               imageUrl: imageUrl,
+              databaseReference: `/FriendsReferenceForNotification/${receiverId}/${senderId}`,
               senderId
             }
           };
